@@ -1,0 +1,9 @@
+keyboards/kiboard/
+├── config.h
+├── halconf.h
+├── info.json
+├── kiboard.c
+├── kiboard.h
+├── mcuconf.h
+├── readme.md
+└── rules.mk
