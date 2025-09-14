@@ -10,6 +10,12 @@
 | LCD_RST   | GP18| LCD Reset |
 | LCD_BL    | GP19| LCD Backlight |
 | TOUCH_RST | GP20| Touch Reset |
+| Keys A-D  | GP0-GP3 | Left Keys |
+| Keys 1-4  | GP4-GP7 | Right Keys |
+| JOY1_X    | GP26| Left Joystick X |
+| JOY1_Y    | GP27| Left Joystick Y |
+| JOY2_X    | GP28| Right Joystick X |
+| JOY2_Y    | GP29| Right Joystick Y |
 
 ### Display
 - ILI9341 2.8" TFT LCD

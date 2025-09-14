@@ -1,12 +1,9 @@
 MCU = RP2040
 BOOTLOADER = rp2040
-SPLIT_KEYBOARD = yes
 ANALOG_DRIVER_ENABLE = yes
 JOYSTICK_ENABLE = yes
 COMBO_ENABLE = yes
 BOOTMAGIC_ENABLE = yes
 DYNAMIC_KEYMAP_ENABLE = yes
 EEPROM_DRIVER = vendor
-SRC += analog.c
-QUANTUM_LIB_SRC += i2c_master.c spi_master.c lcd_backlight.c
-SRC += drivers/display/ili9341.c drivers/touch/ft6236.c
+SRC += analog.c config_mode.c
