@@ -1,5 +1,5 @@
 #pragma once
-#include "quantum.h"
+#include QMK_KEYBOARD_H
 
 #define LAYOUT( \
     k00, k01, k02, k03, k04, k05, k06, k07 \
