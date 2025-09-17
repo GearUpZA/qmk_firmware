@@ -1,27 +1,37 @@
 {
     "manufacturer": "Custom",
     "keyboard_name": "KiBoard",
-    "maintainer": "your-github-username",
+    "maintainer": "GearUpZA",
     "bootloader": "rp2040",
+    "processor": "RP2040",
+    "board": "GENERIC_RP_RP2040",
+    "url": "https://github.com/GearUpZA/kiboard",
+    "usb": {
+        "device_version": "1.0.0",
+        "pid": "0x6B62",
+        "vid": "0xFEED"
+    },
+    "debounce": 5,
     "diode_direction": "COL2ROW",
+    "matrix_pins": {
+        "cols": ["GP0", "GP1", "GP2", "GP3", "GP4", "GP5", "GP6", "GP7"],
+        "rows": ["GP8"]
+    },
     "features": {
         "bootmagic": true,
         "command": false,
         "console": false,
         "extrakey": true,
         "mousekey": true,
-        "nkro": true
+        "nkro": true,
+        "combo": true,
+        "pointing_device": true
     },
-    "matrix_pins": {
-        "cols": ["GP0", "GP1", "GP2", "GP3", "GP4", "GP5", "GP6", "GP7"],
-        "rows": ["GP8"]
+    "pointing_device": {
+        "driver": "custom"
     },
-    "processor": "RP2040",
-    "url": "https://github.com/custom/kiboard",
-    "usb": {
-        "device_version": "1.0.0",
-        "pid": "0x6B62",
-        "vid": "0xFEED"
+    "build": {
+        "lto": true
     },
     "layouts": {
         "LAYOUT": {
