@@ -3,9 +3,6 @@
     "keyboard_name": "KiBoard",
     "maintainer": "your-github-username",
     "bootloader": "rp2040",
-    "bootmagic": {
-        "enabled": true
-    },
     "diode_direction": "COL2ROW",
     "features": {
         "bootmagic": true,
@@ -29,14 +26,14 @@
     "layouts": {
         "LAYOUT": {
             "layout": [
-                {"label": "A", "matrix": [0, 0], "x": 0, "y": 0},
-                {"label": "B", "matrix": [0, 1], "x": 1, "y": 0},
-                {"label": "C", "matrix": [0, 2], "x": 2, "y": 0},
-                {"label": "D", "matrix": [0, 3], "x": 3, "y": 0},
-                {"label": "1", "matrix": [0, 4], "x": 4, "y": 0},
-                {"label": "2", "matrix": [0, 5], "x": 5, "y": 0},
-                {"label": "3", "matrix": [0, 6], "x": 6, "y": 0},
-                {"label": "4", "matrix": [0, 7], "x": 7, "y": 0}
+                {"matrix": [0, 0], "x": 0, "y": 0},
+                {"matrix": [0, 1], "x": 1, "y": 0},
+                {"matrix": [0, 2], "x": 2, "y": 0},
+                {"matrix": [0, 3], "x": 3, "y": 0},
+                {"matrix": [0, 4], "x": 4, "y": 0},
+                {"matrix": [0, 5], "x": 5, "y": 0},
+                {"matrix": [0, 6], "x": 6, "y": 0},
+                {"matrix": [0, 7], "x": 7, "y": 0}
             ]
         }
     }

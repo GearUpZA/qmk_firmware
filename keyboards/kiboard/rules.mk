@@ -18,10 +18,9 @@ RGBLIGHT_ENABLE = no        # Enable keyboard RGB underglow
 AUDIO_ENABLE = no           # Audio output
 
 # Custom features for KiBoard
-ANALOG_DRIVER_ENABLE = yes
 COMBO_ENABLE = yes
-DYNAMIC_KEYMAP_ENABLE = yes
-JOYSTICK_ENABLE = yes
 POINTING_DEVICE_ENABLE = yes
 POINTING_DEVICE_DRIVER = custom
+
+# Custom source files
 SRC += analog.c config_mode.c
