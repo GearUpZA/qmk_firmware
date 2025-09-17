@@ -1,5 +1,12 @@
 #include QMK_KEYBOARD_H
 #include "g/keymap_combo.h"
+#include "analog.h"
+
+// Custom keycodes
+enum custom_keycodes {
+    JOY_PROFILE = SAFE_RANGE,
+    JOY_NEW_SAFE_RANGE
+};
 
 // Single Left + Single Right combinations
 const uint16_t PROGMEM combo_A1[] = {KC_A, KC_1, COMBO_END};
@@ -139,6 +146,15 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 };
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    // Handle custom keycodes
+    switch (keycode) {
+        case JOY_PROFILE:
+            if (record->event.pressed) {
+                cycle_joystick_profiles();
+            }
+            return false;
+    }
+
     // Special combo to enter config mode: Hold A+B+C+D for 3 seconds
     static uint16_t config_timer;
     if (layer_state == 0 &&
