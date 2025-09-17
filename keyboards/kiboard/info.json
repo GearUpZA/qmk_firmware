@@ -1,42 +1,52 @@
 {
-    "keyboard_name": "KiBoard",
     "manufacturer": "Custom",
-    "url": "",
+    "keyboard_name": "KiBoard",
     "maintainer": "your-github-username",
-    "usb": {
-        "vid": "0xFEED",
-        "pid": "0x0000",
-        "device_version": "1.0.0"
-    },
-    "processor": "RP2040",
     "bootloader": "rp2040",
+    "bootmagic": {
+        "enabled": true
+    },
+    "debounce": 5,
+    "eeprom": {
+        "driver": "vendor"
+    },
     "features": {
+        "analog": true,
         "bootmagic": true,
         "command": false,
         "console": false,
         "extrakey": true,
-        "mousekey": true,
-        "analog": true
+        "mousekey": true
+    },
+    "joystick": {
+        "enabled": true
     },
     "matrix_pins": {
         "cols": ["GP0", "GP1", "GP2", "GP3", "GP4", "GP5", "GP6", "GP7"],
         "rows": ["GP8", "GP9"]
     },
+    "processor": "RP2040",
     "split": {
         "enabled": true,
         "soft_serial_pin": "GP1"
     },
+    "url": "",
+    "usb": {
+        "device_version": "1.0.0",
+        "pid": "0x0000",
+        "vid": "0xFEED"
+    },
     "layouts": {
         "LAYOUT": {
             "layout": [
-                {"matrix": [0, 0], "x": 0, "y": 0, "label": "A"},
-                {"matrix": [0, 1], "x": 1, "y": 0, "label": "B"},
-                {"matrix": [0, 2], "x": 2, "y": 0, "label": "C"},
-                {"matrix": [0, 3], "x": 3, "y": 0, "label": "D"},
-                {"matrix": [0, 4], "x": 4, "y": 0, "label": "1"},
-                {"matrix": [0, 5], "x": 5, "y": 0, "label": "2"},
-                {"matrix": [0, 6], "x": 6, "y": 0, "label": "3"},
-                {"matrix": [0, 7], "x": 7, "y": 0, "label": "4"}
+                {"label": "A", "matrix": [0, 0], "x": 0, "y": 0},
+                {"label": "B", "matrix": [0, 1], "x": 1, "y": 0},
+                {"label": "C", "matrix": [0, 2], "x": 2, "y": 0},
+                {"label": "D", "matrix": [0, 3], "x": 3, "y": 0},
+                {"label": "1", "matrix": [0, 4], "x": 4, "y": 0},
+                {"label": "2", "matrix": [0, 5], "x": 5, "y": 0},
+                {"label": "3", "matrix": [0, 6], "x": 6, "y": 0},
+                {"label": "4", "matrix": [0, 7], "x": 7, "y": 0}
             ]
         }
     }

@@ -11,4 +11,3 @@
 #define ANALOG_JOYSTICK_Y_AXIS_PIN_RIGHT GP29
 
 // Debounce reduces chatter
-#define DEBOUNCE 5
