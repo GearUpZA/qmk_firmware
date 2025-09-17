@@ -6,34 +6,24 @@
     "bootmagic": {
         "enabled": true
     },
-    "debounce": 5,
-    "eeprom": {
-        "driver": "vendor"
-    },
+    "diode_direction": "COL2ROW",
     "features": {
-        "analog": true,
         "bootmagic": true,
         "command": false,
         "console": false,
         "extrakey": true,
-        "mousekey": true
-    },
-    "joystick": {
-        "enabled": true
+        "mousekey": true,
+        "nkro": true
     },
     "matrix_pins": {
         "cols": ["GP0", "GP1", "GP2", "GP3", "GP4", "GP5", "GP6", "GP7"],
-        "rows": ["GP8", "GP9"]
+        "rows": ["GP8"]
     },
     "processor": "RP2040",
-    "split": {
-        "enabled": true,
-        "soft_serial_pin": "GP1"
-    },
-    "url": "",
+    "url": "https://github.com/custom/kiboard",
     "usb": {
         "device_version": "1.0.0",
-        "pid": "0x0000",
+        "pid": "0x6B62",
         "vid": "0xFEED"
     },
     "layouts": {
