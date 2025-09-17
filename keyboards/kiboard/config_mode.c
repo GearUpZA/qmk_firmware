@@ -5,6 +5,12 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+// QMK function declarations
+uint8_t eeprom_read_byte(const uint8_t *addr);
+void eeprom_update_byte(uint8_t *addr, uint8_t value);
+uint32_t timer_read32(void);
+uint32_t timer_elapsed32(uint32_t last);
+
 // Config mode flag in EEPROM
 #define CONFIG_MODE_ADDR 100
 #define CONFIG_MODE_MAGIC 0x42

@@ -1,6 +1,58 @@
 #include QMK_KEYBOARD_H
-#include "g/keymap_combo.h"
+#include <stdint.h>
+#include <stdbool.h>
 #include "analog.h"
+
+// QMK definitions
+#define SAFE_RANGE 0x5F80
+#define COMBO_END 0
+#define PROGMEM
+#define XXXXXXX 0x0000
+#define MATRIX_ROWS 1
+#define MATRIX_COLS 8
+
+// Keycode definitions
+#define KC_A 0x04
+#define KC_B 0x05
+#define KC_C 0x06
+#define KC_D 0x07
+#define KC_1 0x1E
+#define KC_2 0x1F
+#define KC_3 0x20
+#define KC_4 0x21
+
+// Type definitions
+typedef struct {
+    bool pressed;
+    uint16_t time;
+} keyevent_t;
+
+typedef struct {
+    keyevent_t event;
+} keyrecord_t;
+
+typedef struct {
+    const uint16_t* keys;
+    uint16_t keycode;
+} combo_t;
+
+// Function declarations
+void cycle_joystick_profiles(void);
+void enter_config_mode(void);
+void reset_keyboard(void);
+uint16_t timer_read(void);
+bool timer_elapsed(uint16_t last, uint16_t timeout);
+bool IS_PRESSED(uint16_t keycode);
+
+// Global variables
+uint32_t layer_state = 0;
+static uint16_t config_timer = 0;
+
+// Combo macro
+#define COMBO(keys, keycode) {keys, keycode}
+
+// Layout macro
+#define LAYOUT(k0, k1, k2, k3, k4, k5, k6, k7) {{k0, k1, k2, k3, k4, k5, k6, k7}}
 
 // Custom keycodes
 enum custom_keycodes {
@@ -163,7 +215,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         if (record->event.pressed) {
             config_timer = timer_read();
         } else {
-            if (timer_elapsed(config_timer) > 3000) {
+            if (timer_elapsed(config_timer, 3000)) {
                 enter_config_mode();
                 reset_keyboard(); // This will restart the keyboard
             }

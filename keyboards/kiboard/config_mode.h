@@ -2,7 +2,6 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "quantum.h"
 
 #define CONFIG_MODE_ADDR 100
 #define CONFIG_MODE_MAGIC 0x42

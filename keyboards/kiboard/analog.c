@@ -1,7 +1,34 @@
 #include "kiboard.h"
-#include "quantum.h"
+#include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
+
+// QMK function declarations
+uint16_t analogReadPin(uint8_t pin);
+void register_code(uint8_t keycode);
+void unregister_code(uint8_t keycode);
+void tap_code(uint8_t keycode);
+uint16_t timer_read(void);
+bool timer_elapsed(uint16_t last, uint16_t timeout);
+void register_code16(uint16_t keycode);
+void unregister_code16(uint16_t keycode);
+
+// Weak function declarations for QMK callbacks
+__attribute__((weak)) void matrix_scan_user(void) {}
+
+// Math function declarations
+int abs(int x);
+
+// Mouse/pointing device declarations
+typedef struct {
+    int8_t x;
+    int8_t y;
+    uint8_t buttons;
+} report_mouse_t;
+
+report_mouse_t pointing_device_get_report(void);
+void pointing_device_set_report(report_mouse_t mouse_report);
+void pointing_device_send(void);
 
 // Joystick modes
 typedef enum {
@@ -25,10 +52,18 @@ typedef struct {
 #define ANALOG_JOYSTICK_AXIS_MAX 1023 // Max ADC value
 
 // Pin definitions from config.h
+#define GP26 26
+#define GP27 27
+#define GP28 28
+#define GP29 29
 #define JOYSTICK_1_X_PIN GP26
 #define JOYSTICK_1_Y_PIN GP27
 #define JOYSTICK_2_X_PIN GP28
 #define JOYSTICK_2_Y_PIN GP29
+
+// QMK keycode definitions
+#define KC_F13 0x68
+#define KC_F17 0x6C
 
 // Global state
 static joystick_mode_t joy1_mode = JOY_MODE_DIGITAL;
@@ -41,48 +76,12 @@ void analog_init(void) {
     // RP2040 handles this automatically when analogReadPin is called
 }
 
-#include "kiboard.h"
-#include "quantum.h"
-#include <stdbool.h>
-#include <stdlib.h>
-#include <stdint.h>
-
-// Joystick modes
-typedef enum {
-    JOY_MODE_ANALOG,    // Analog output for camera/mouse control
-    JOY_MODE_DIGITAL    // Digital hat switch for button presses
-} joystick_mode_t;
-
-// Joystick state tracking
-typedef struct {
-    bool up, down, left, right;
-    bool prev_up, prev_down, prev_left, prev_right;
-    uint16_t debounce_timer;
-} joystick_digital_state_t;
-
-// Configuration
-#define JOYSTICK_THRESHOLD_HIGH 700   // Above this = direction active
-#define JOYSTICK_THRESHOLD_LOW 300    // Below this = direction active
-#define JOYSTICK_CENTER 512           // Center position
-#define JOYSTICK_DEBOUNCE_MS 50       // Debounce time for digital mode
-#define ANALOG_JOYSTICK_DEADZONE 50   // Deadzone for analog mode
-#define ANALOG_JOYSTICK_AXIS_MAX 1023 // Max ADC value
-
-// Pin definitions from config.h
-#define JOYSTICK_1_X_PIN GP26
-#define JOYSTICK_1_Y_PIN GP27
-#define JOYSTICK_2_X_PIN GP28
-#define JOYSTICK_2_Y_PIN GP29
-
-// Global state
-static joystick_mode_t joy1_mode = JOY_MODE_DIGITAL;
-static joystick_mode_t joy2_mode = JOY_MODE_DIGITAL;
-static joystick_digital_state_t joy1_digital = {0};
-static joystick_digital_state_t joy2_digital = {0};
-
-void analog_init(void) {
-    // Initialize ADC pins for analog reading
-    // RP2040 handles this automatically when analogReadPin is called
+int apply_deadzone(int val) {
+    // Apply deadzone for analog mode
+    if (abs(val - (ANALOG_JOYSTICK_AXIS_MAX / 2)) < ANALOG_JOYSTICK_DEADZONE) {
+        return JOYSTICK_CENTER;
+    }
+    return val;
 }
 
 int16_t analog_read_joy(uint8_t pin) {
@@ -209,7 +208,7 @@ void matrix_scan_kb(void) {
 
         // Send digital events if state changed and debounce time passed
         if (joystick_digital_changed(&joy1_digital) &&
-            timer_elapsed(joy1_digital.debounce_timer) > JOYSTICK_DEBOUNCE_MS) {
+            timer_elapsed(joy1_digital.debounce_timer, JOYSTICK_DEBOUNCE_MS)) {
             // Base keycode for Joy1: you'll need to define these in your keymap
             // JOY1_UP, JOY1_DOWN, JOY1_LEFT, JOY1_RIGHT
             send_joystick_digital_events(&joy1_digital, KC_F13); // Example base keycode
@@ -222,7 +221,7 @@ void matrix_scan_kb(void) {
         update_joystick_digital(joy2_x, joy2_y, &joy2_digital);
 
         if (joystick_digital_changed(&joy2_digital) &&
-            timer_elapsed(joy2_digital.debounce_timer) > JOYSTICK_DEBOUNCE_MS) {
+            timer_elapsed(joy2_digital.debounce_timer, JOYSTICK_DEBOUNCE_MS)) {
             // Base keycode for Joy2: JOY2_UP, JOY2_DOWN, JOY2_LEFT, JOY2_RIGHT
             send_joystick_digital_events(&joy2_digital, KC_F17); // Example base keycode
             joy2_digital.debounce_timer = timer_read();
