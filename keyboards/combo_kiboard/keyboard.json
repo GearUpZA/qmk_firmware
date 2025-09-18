@@ -1,7 +1,7 @@
 {
     "keyboard_name": "Combo Kiboard",
     "manufacturer": "Custom Keyboards",
-    "url": "",
+    "url": "www.gear-up.co.za",
     "maintainer": "qmk",
     "usb": {
         "vid": "0x1234",
