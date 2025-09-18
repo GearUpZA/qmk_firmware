@@ -1,15 +1,38 @@
-#include "kiboard.h"
+/* Copyright 2025 GearUpZA <you@example.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "config_mode.h"
-#include "analog.h"
+#include "quantum.h"
+#include "action_layer.h"
 #include <stdint.h>
 #include <stdbool.h>
-#include <stdio.h>
 
 // QMK function declarations
 uint8_t eeprom_read_byte(const uint8_t *addr);
 void eeprom_update_byte(uint8_t *addr, uint8_t value);
 uint32_t timer_read32(void);
 uint32_t timer_elapsed32(uint32_t last);
+
+// Layer definitions (must match keymap.c)
+enum layers {
+    _BASE = 0,
+    _DIGITAL,
+    _GAMING,
+    _CONFIG
+};
 
 // Config mode flag in EEPROM
 #define CONFIG_MODE_ADDR 100
@@ -21,13 +44,21 @@ static uint32_t last_display_update = 0;
 static uint32_t display_timeout = 30000; // 30 seconds before dimming
 static bool display_initialized = false;
 
-// Profile information
+// Profile information (updated for layer-based system)
 static const profile_info_t profile_configs[4] = {
-    {"Digital Both", "Digital", "Digital", 0},
-    {"Mixed 1", "Analog", "Digital", 1},
-    {"Mixed 2", "Digital", "Analog", 2},
-    {"Analog Both", "Analog", "Analog", 3}
+    {"Base Mode", "Analog", "Mouse", 0},
+    {"Digital Mode", "WASD", "Arrows", 1},
+    {"Gaming Mode", "Gaming", "Hotkeys", 2},
+    {"Config Mode", "Config", "Setup", 3}
 };
+
+// Helper function to get profile name (prevents unused variable warning)
+static const char* get_profile_name(uint8_t profile_id) {
+    if (profile_id < 4) {
+        return profile_configs[profile_id].name;
+    }
+    return "Unknown";
+}
 
 bool is_config_mode(void) {
     return eeprom_read_byte((uint8_t*)CONFIG_MODE_ADDR) == CONFIG_MODE_MAGIC;
@@ -87,19 +118,15 @@ display_mode_t get_display_mode(void) {
 void show_profile_status(void) {
     if (!display_initialized) return;
 
-    // Get current profile information
-    uint8_t joy1_mode = get_joystick_mode(1);
-    uint8_t joy2_mode = get_joystick_mode(2);
+    // Get current active layer (simplified - just use default)
+    uint8_t current_layer = 0; // Default to BASE layer
+    
+    // Ensure layer index is valid
+    if (current_layer >= 4) current_layer = 0;
 
-    // Determine which profile is active
-    uint8_t current_profile = 0;
-    if (joy1_mode == JOY_MODE_ANALOG && joy2_mode == JOY_MODE_DIGITAL) {
-        current_profile = 1;
-    } else if (joy1_mode == JOY_MODE_DIGITAL && joy2_mode == JOY_MODE_ANALOG) {
-        current_profile = 2;
-    } else if (joy1_mode == JOY_MODE_ANALOG && joy2_mode == JOY_MODE_ANALOG) {
-        current_profile = 3;
-    }
+    // Use current_layer for profile info
+    const char* profile_name = get_profile_name(current_layer);
+    (void)profile_name; // Suppress unused variable warning
 
     // Clear display and show profile info
     // display_clear();
@@ -108,14 +135,14 @@ void show_profile_status(void) {
     // display_text(10, 10, "KiBoard - Active Profile", COLOR_WHITE);
 
     // Current profile name
-    // display_text(10, 40, profile_configs[current_profile].name, COLOR_CYAN);
+    // display_text(10, 40, profile_configs[current_layer].name, COLOR_CYAN);
 
-    // Joystick modes
+    // Layer modes
     // char status_line[64];
-    // snprintf(status_line, sizeof(status_line), "Joy1: %s", profile_configs[current_profile].joy1_mode);
+    // snprintf(status_line, sizeof(status_line), "Left: %s", profile_configs[current_layer].joy1_mode);
     // display_text(10, 70, status_line, COLOR_GREEN);
 
-    // snprintf(status_line, sizeof(status_line), "Joy2: %s", profile_configs[current_profile].joy2_mode);
+    // snprintf(status_line, sizeof(status_line), "Right: %s", profile_configs[current_layer].joy2_mode);
     // display_text(10, 100, status_line, COLOR_GREEN);
 
     // Instructions
@@ -139,22 +166,20 @@ void show_profile_selector(void) {
     for (int i = 0; i < 4; i++) {
         uint16_t y_pos = TOUCH_ZONE_PROFILE_1_Y + (i * 50);
 
-        // Highlight current profile
-        uint8_t joy1_mode = get_joystick_mode(1);
-        uint8_t joy2_mode = get_joystick_mode(2);
-        bool is_current = false;
+        // For simplicity, assume current layer 0 is active
+        // In real implementation, you'd check the actual layer state
+        bool is_current = (i == 0);
 
-        if (i == 0 && joy1_mode == JOY_MODE_DIGITAL && joy2_mode == JOY_MODE_DIGITAL) is_current = true;
-        if (i == 1 && joy1_mode == JOY_MODE_ANALOG && joy2_mode == JOY_MODE_DIGITAL) is_current = true;
-        if (i == 2 && joy1_mode == JOY_MODE_DIGITAL && joy2_mode == JOY_MODE_ANALOG) is_current = true;
-        if (i == 3 && joy1_mode == JOY_MODE_ANALOG && joy2_mode == JOY_MODE_ANALOG) is_current = true;
+        // Use variables (prevents unused variable warnings)
+        (void)y_pos;
+        (void)is_current;
 
         // Draw profile button
         // uint16_t color = is_current ? COLOR_GREEN : COLOR_WHITE;
         // display_rectangle(10, y_pos, TOUCH_ZONE_WIDTH, TOUCH_ZONE_HEIGHT, color);
         // display_text(20, y_pos + 10, profile_configs[i].name, COLOR_BLACK);
 
-        // Show joystick modes
+        // Show layer modes
         // char mode_text[32];
         // snprintf(mode_text, sizeof(mode_text), "%s | %s",
         //          profile_configs[i].joy1_mode, profile_configs[i].joy2_mode);
@@ -183,27 +208,23 @@ void handle_display_touch(uint16_t x, uint16_t y) {
             if (x >= 10 && x <= (10 + TOUCH_ZONE_WIDTH)) {
                 // Determine which profile was touched
                 if (y >= TOUCH_ZONE_PROFILE_1_Y && y <= (TOUCH_ZONE_PROFILE_1_Y + TOUCH_ZONE_HEIGHT)) {
-                    // Profile 0: Both Digital
-                    set_joystick_mode(1, JOY_MODE_DIGITAL);
-                    set_joystick_mode(2, JOY_MODE_DIGITAL);
+                    // Profile 0: Base Layer
+                    // TODO: Switch to base layer when QMK layer functions are available
                     update_display_mode(DISPLAY_MODE_STATUS);
                 }
                 else if (y >= TOUCH_ZONE_PROFILE_2_Y && y <= (TOUCH_ZONE_PROFILE_2_Y + TOUCH_ZONE_HEIGHT)) {
-                    // Profile 1: Joy1 Analog, Joy2 Digital
-                    set_joystick_mode(1, JOY_MODE_ANALOG);
-                    set_joystick_mode(2, JOY_MODE_DIGITAL);
+                    // Profile 1: Digital Layer
+                    // TODO: Switch to digital layer when QMK layer functions are available
                     update_display_mode(DISPLAY_MODE_STATUS);
                 }
                 else if (y >= TOUCH_ZONE_PROFILE_3_Y && y <= (TOUCH_ZONE_PROFILE_3_Y + TOUCH_ZONE_HEIGHT)) {
-                    // Profile 2: Joy1 Digital, Joy2 Analog
-                    set_joystick_mode(1, JOY_MODE_DIGITAL);
-                    set_joystick_mode(2, JOY_MODE_ANALOG);
+                    // Profile 2: Gaming Layer
+                    // TODO: Switch to gaming layer when QMK layer functions are available
                     update_display_mode(DISPLAY_MODE_STATUS);
                 }
                 else if (y >= TOUCH_ZONE_PROFILE_4_Y && y <= (TOUCH_ZONE_PROFILE_4_Y + TOUCH_ZONE_HEIGHT)) {
-                    // Profile 3: Both Analog
-                    set_joystick_mode(1, JOY_MODE_ANALOG);
-                    set_joystick_mode(2, JOY_MODE_ANALOG);
+                    // Profile 3: Config Layer
+                    // TODO: Switch to config layer when QMK layer functions are available
                     update_display_mode(DISPLAY_MODE_STATUS);
                 }
             }

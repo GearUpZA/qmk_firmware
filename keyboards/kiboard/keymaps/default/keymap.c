@@ -1,226 +1,233 @@
+/* Copyright 2025 GearUpZA <you@example.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include QMK_KEYBOARD_H
-#include <stdint.h>
-#include <stdbool.h>
-#include "analog.h"
 
-// QMK definitions
-#define SAFE_RANGE 0x5F80
-#define COMBO_END 0
-#define PROGMEM
-#define XXXXXXX 0x0000
-#define MATRIX_ROWS 1
-#define MATRIX_COLS 8
+// Layer definitions
+enum layers {
+    _BASE = 0,
+    _DIGITAL,
+    _GAMING,
+    _CONFIG
+};
 
-// Keycode definitions
-#define KC_A 0x04
-#define KC_B 0x05
-#define KC_C 0x06
-#define KC_D 0x07
-#define KC_1 0x1E
-#define KC_2 0x1F
-#define KC_3 0x20
-#define KC_4 0x21
-
-// Type definitions
-typedef struct {
-    bool pressed;
-    uint16_t time;
-} keyevent_t;
-
-typedef struct {
-    keyevent_t event;
-} keyrecord_t;
-
-typedef struct {
-    const uint16_t* keys;
-    uint16_t keycode;
-} combo_t;
-
-// Function declarations
-void cycle_joystick_profiles(void);
-void enter_config_mode(void);
-void reset_keyboard(void);
-uint16_t timer_read(void);
-bool timer_elapsed(uint16_t last, uint16_t timeout);
-bool IS_PRESSED(uint16_t keycode);
-
-// Global variables
-uint32_t layer_state = 0;
-static uint16_t config_timer = 0;
-
-// Combo macro
-#define COMBO(keys, keycode) {keys, keycode}
-
-// Layout macro
-#define LAYOUT(k0, k1, k2, k3, k4, k5, k6, k7) {{k0, k1, k2, k3, k4, k5, k6, k7}}
-
-// Custom keycodes
+// Custom keycodes for layer switching and special functions
 enum custom_keycodes {
-    JOY_PROFILE = SAFE_RANGE,
-    JOY_NEW_SAFE_RANGE
+    KC_PROFILE = SAFE_RANGE,
+    KC_CONFIG,
+    KC_RESET_PROFILE
 };
 
-// Single Left + Single Right combinations
-const uint16_t PROGMEM combo_A1[] = {KC_A, KC_1, COMBO_END};
-const uint16_t PROGMEM combo_A2[] = {KC_A, KC_2, COMBO_END};
-const uint16_t PROGMEM combo_A3[] = {KC_A, KC_3, COMBO_END};
-const uint16_t PROGMEM combo_A4[] = {KC_A, KC_4, COMBO_END};
-
-const uint16_t PROGMEM combo_B1[] = {KC_B, KC_1, COMBO_END};
-const uint16_t PROGMEM combo_B2[] = {KC_B, KC_2, COMBO_END};
-const uint16_t PROGMEM combo_B3[] = {KC_B, KC_3, COMBO_END};
-const uint16_t PROGMEM combo_B4[] = {KC_B, KC_4, COMBO_END};
-
-const uint16_t PROGMEM combo_C1[] = {KC_C, KC_1, COMBO_END};
-const uint16_t PROGMEM combo_C2[] = {KC_C, KC_2, COMBO_END};
-const uint16_t PROGMEM combo_C3[] = {KC_C, KC_3, COMBO_END};
-const uint16_t PROGMEM combo_C4[] = {KC_C, KC_4, COMBO_END};
-
-const uint16_t PROGMEM combo_D1[] = {KC_D, KC_1, COMBO_END};
-const uint16_t PROGMEM combo_D2[] = {KC_D, KC_2, COMBO_END};
-const uint16_t PROGMEM combo_D3[] = {KC_D, KC_3, COMBO_END};
-const uint16_t PROGMEM combo_D4[] = {KC_D, KC_4, COMBO_END};
-
-// Two Left + Single Right combinations
-const uint16_t PROGMEM combo_AB1[] = {KC_A, KC_B, KC_1, COMBO_END};
-const uint16_t PROGMEM combo_AB2[] = {KC_A, KC_B, KC_2, COMBO_END};
-const uint16_t PROGMEM combo_AB3[] = {KC_A, KC_B, KC_3, COMBO_END};
-const uint16_t PROGMEM combo_AB4[] = {KC_A, KC_B, KC_4, COMBO_END};
-
-const uint16_t PROGMEM combo_AC1[] = {KC_A, KC_C, KC_1, COMBO_END};
-const uint16_t PROGMEM combo_AC2[] = {KC_A, KC_C, KC_2, COMBO_END};
-const uint16_t PROGMEM combo_AC3[] = {KC_A, KC_C, KC_3, COMBO_END};
-const uint16_t PROGMEM combo_AC4[] = {KC_A, KC_C, KC_4, COMBO_END};
-
-const uint16_t PROGMEM combo_AD1[] = {KC_A, KC_D, KC_1, COMBO_END};
-const uint16_t PROGMEM combo_AD2[] = {KC_A, KC_D, KC_2, COMBO_END};
-const uint16_t PROGMEM combo_AD3[] = {KC_A, KC_D, KC_3, COMBO_END};
-const uint16_t PROGMEM combo_AD4[] = {KC_A, KC_D, KC_4, COMBO_END};
-
-const uint16_t PROGMEM combo_BC1[] = {KC_B, KC_C, KC_1, COMBO_END};
-const uint16_t PROGMEM combo_BC2[] = {KC_B, KC_C, KC_2, COMBO_END};
-const uint16_t PROGMEM combo_BC3[] = {KC_B, KC_C, KC_3, COMBO_END};
-const uint16_t PROGMEM combo_BC4[] = {KC_B, KC_C, KC_4, COMBO_END};
-
-const uint16_t PROGMEM combo_BD1[] = {KC_B, KC_D, KC_1, COMBO_END};
-const uint16_t PROGMEM combo_BD2[] = {KC_B, KC_D, KC_2, COMBO_END};
-const uint16_t PROGMEM combo_BD3[] = {KC_B, KC_D, KC_3, COMBO_END};
-const uint16_t PROGMEM combo_BD4[] = {KC_B, KC_D, KC_4, COMBO_END};
-
-const uint16_t PROGMEM combo_CD1[] = {KC_C, KC_D, KC_1, COMBO_END};
-const uint16_t PROGMEM combo_CD2[] = {KC_C, KC_D, KC_2, COMBO_END};
-const uint16_t PROGMEM combo_CD3[] = {KC_C, KC_D, KC_3, COMBO_END};
-const uint16_t PROGMEM combo_CD4[] = {KC_C, KC_D, KC_4, COMBO_END};
-
-// Single Left + Two Right combinations
-const uint16_t PROGMEM combo_A12[] = {KC_A, KC_1, KC_2, COMBO_END};
-const uint16_t PROGMEM combo_A13[] = {KC_A, KC_1, KC_3, COMBO_END};
-const uint16_t PROGMEM combo_A14[] = {KC_A, KC_1, KC_4, COMBO_END};
-const uint16_t PROGMEM combo_A23[] = {KC_A, KC_2, KC_3, COMBO_END};
-const uint16_t PROGMEM combo_A24[] = {KC_A, KC_2, KC_4, COMBO_END};
-const uint16_t PROGMEM combo_A34[] = {KC_A, KC_3, KC_4, COMBO_END};
-
-const uint16_t PROGMEM combo_B12[] = {KC_B, KC_1, KC_2, COMBO_END};
-const uint16_t PROGMEM combo_B13[] = {KC_B, KC_1, KC_3, COMBO_END};
-const uint16_t PROGMEM combo_B14[] = {KC_B, KC_1, KC_4, COMBO_END};
-const uint16_t PROGMEM combo_B23[] = {KC_B, KC_2, KC_3, COMBO_END};
-const uint16_t PROGMEM combo_B24[] = {KC_B, KC_2, KC_4, COMBO_END};
-const uint16_t PROGMEM combo_B34[] = {KC_B, KC_3, KC_4, COMBO_END};
-
-const uint16_t PROGMEM combo_C12[] = {KC_C, KC_1, KC_2, COMBO_END};
-const uint16_t PROGMEM combo_C13[] = {KC_C, KC_1, KC_3, COMBO_END};
-const uint16_t PROGMEM combo_C14[] = {KC_C, KC_1, KC_4, COMBO_END};
-const uint16_t PROGMEM combo_C23[] = {KC_C, KC_2, KC_3, COMBO_END};
-const uint16_t PROGMEM combo_C24[] = {KC_C, KC_2, KC_4, COMBO_END};
-const uint16_t PROGMEM combo_C34[] = {KC_C, KC_3, KC_4, COMBO_END};
-
-const uint16_t PROGMEM combo_D12[] = {KC_D, KC_1, KC_2, COMBO_END};
-const uint16_t PROGMEM combo_D13[] = {KC_D, KC_1, KC_3, COMBO_END};
-const uint16_t PROGMEM combo_D14[] = {KC_D, KC_1, KC_4, COMBO_END};
-const uint16_t PROGMEM combo_D23[] = {KC_D, KC_2, KC_3, COMBO_END};
-const uint16_t PROGMEM combo_D24[] = {KC_D, KC_2, KC_4, COMBO_END};
-const uint16_t PROGMEM combo_D34[] = {KC_D, KC_3, KC_4, COMBO_END};
-
-// Two Left + Two Right combinations
-const uint16_t PROGMEM combo_AB12[] = {KC_A, KC_B, KC_1, KC_2, COMBO_END};
-const uint16_t PROGMEM combo_AB13[] = {KC_A, KC_B, KC_1, KC_3, COMBO_END};
-const uint16_t PROGMEM combo_AB14[] = {KC_A, KC_B, KC_1, KC_4, COMBO_END};
-const uint16_t PROGMEM combo_AB23[] = {KC_A, KC_B, KC_2, KC_3, COMBO_END};
-const uint16_t PROGMEM combo_AB24[] = {KC_A, KC_B, KC_2, KC_4, COMBO_END};
-const uint16_t PROGMEM combo_AB34[] = {KC_A, KC_B, KC_3, KC_4, COMBO_END};
-
-const uint16_t PROGMEM combo_AC12[] = {KC_A, KC_C, KC_1, KC_2, COMBO_END};
-const uint16_t PROGMEM combo_AC13[] = {KC_A, KC_C, KC_1, KC_3, COMBO_END};
-const uint16_t PROGMEM combo_AC14[] = {KC_A, KC_C, KC_1, KC_4, COMBO_END};
-const uint16_t PROGMEM combo_AC23[] = {KC_A, KC_C, KC_2, KC_3, COMBO_END};
-const uint16_t PROGMEM combo_AC24[] = {KC_A, KC_C, KC_2, KC_4, COMBO_END};
-const uint16_t PROGMEM combo_AC34[] = {KC_A, KC_C, KC_3, KC_4, COMBO_END};
-
-const uint16_t PROGMEM combo_AD12[] = {KC_A, KC_D, KC_1, KC_2, COMBO_END};
-const uint16_t PROGMEM combo_AD13[] = {KC_A, KC_D, KC_1, KC_3, COMBO_END};
-const uint16_t PROGMEM combo_AD14[] = {KC_A, KC_D, KC_1, KC_4, COMBO_END};
-const uint16_t PROGMEM combo_AD23[] = {KC_A, KC_D, KC_2, KC_3, COMBO_END};
-const uint16_t PROGMEM combo_AD24[] = {KC_A, KC_D, KC_2, KC_4, COMBO_END};
-const uint16_t PROGMEM combo_AD34[] = {KC_A, KC_D, KC_3, KC_4, COMBO_END};
-
-const uint16_t PROGMEM combo_BC12[] = {KC_B, KC_C, KC_1, KC_2, COMBO_END};
-const uint16_t PROGMEM combo_BC13[] = {KC_B, KC_C, KC_1, KC_3, COMBO_END};
-const uint16_t PROGMEM combo_BC14[] = {KC_B, KC_C, KC_1, KC_4, COMBO_END};
-const uint16_t PROGMEM combo_BC23[] = {KC_B, KC_C, KC_2, KC_3, COMBO_END};
-const uint16_t PROGMEM combo_BC24[] = {KC_B, KC_C, KC_2, KC_4, COMBO_END};
-const uint16_t PROGMEM combo_BC34[] = {KC_B, KC_C, KC_3, KC_4, COMBO_END};
-
-const uint16_t PROGMEM combo_BD12[] = {KC_B, KC_D, KC_1, KC_2, COMBO_END};
-const uint16_t PROGMEM combo_BD13[] = {KC_B, KC_D, KC_1, KC_3, COMBO_END};
-const uint16_t PROGMEM combo_BD14[] = {KC_B, KC_D, KC_1, KC_4, COMBO_END};
-const uint16_t PROGMEM combo_BD23[] = {KC_B, KC_D, KC_2, KC_3, COMBO_END};
-const uint16_t PROGMEM combo_BD24[] = {KC_B, KC_D, KC_2, KC_4, COMBO_END};
-const uint16_t PROGMEM combo_BD34[] = {KC_B, KC_D, KC_3, KC_4, COMBO_END};
-
-const uint16_t PROGMEM combo_CD12[] = {KC_C, KC_D, KC_1, KC_2, COMBO_END};
-const uint16_t PROGMEM combo_CD13[] = {KC_C, KC_D, KC_1, KC_3, COMBO_END};
-const uint16_t PROGMEM combo_CD14[] = {KC_C, KC_D, KC_1, KC_4, COMBO_END};
-const uint16_t PROGMEM combo_CD23[] = {KC_C, KC_D, KC_2, KC_3, COMBO_END};
-const uint16_t PROGMEM combo_CD24[] = {KC_C, KC_D, KC_2, KC_4, COMBO_END};
-const uint16_t PROGMEM combo_CD34[] = {KC_C, KC_D, KC_3, KC_4, COMBO_END};
-
-combo_t key_combos[] = {
-    // Placeholders for combo actions - to be defined later
-    COMBO(combo_A1, XXXXXXX),
-    COMBO(combo_A2, XXXXXXX),
-    // ... continue for all combos
-};
-
+// Base layer - analog joysticks for camera/mouse control
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
-    [0] = LAYOUT(
-        KC_A,    KC_B,    KC_C,    KC_D,    KC_1,    KC_2,    KC_3,    KC_4
+    [_BASE] = LAYOUT(
+        KC_A,        KC_B,        KC_C,        KC_D, 
+        KC_1,        KC_2,        KC_3,        TO(_DIGITAL)
+    ),
+    
+    // Digital layer - joysticks act as hat switches for navigation
+    [_DIGITAL] = LAYOUT(
+        KC_W,        KC_A,        KC_S,        KC_D,
+        KC_UP,       KC_LEFT,     KC_DOWN,     TO(_GAMING)
+    ),
+    
+    // Gaming layer - optimized for FPS games
+    [_GAMING] = LAYOUT(
+        KC_LCTL,     KC_LSFT,     KC_SPC,      KC_R,
+        KC_1,        KC_2,        KC_3,        TO(_CONFIG)
+    ),
+    
+    // Configuration layer - settings and profiles
+    [_CONFIG] = LAYOUT(
+        KC_CONFIG,   KC_PROFILE,  KC_RESET_PROFILE, KC_NO,
+        KC_F1,       KC_F2,       KC_F3,       TO(_BASE)
     )
 };
 
+#ifdef COMBO_ENABLE
+// Combo definitions - practical combinations for common actions
+enum combo_events {
+    COMBO_ESC,      // A+B = Escape
+    COMBO_ENTER,    // C+D = Enter  
+    COMBO_TAB,      // A+C = Tab
+    COMBO_BSPC,     // B+D = Backspace
+    COMBO_SPACE,    // 1+2 = Space
+    COMBO_SHIFT,    // 2+3 = Shift
+    COMBO_CTRL,     // 1+3 = Ctrl
+    COMBO_ALT,      // A+1 = Alt
+    COMBO_GUI,      // D+4 = GUI
+    COMBO_DEL,      // 3+4 = Delete
+    COMBO_RESET     // A+D+1+4 = Reset keyboard
+};
+
+// Combo key arrays
+const uint16_t PROGMEM combo_esc[] = {KC_A, KC_B, COMBO_END};
+const uint16_t PROGMEM combo_enter[] = {KC_C, KC_D, COMBO_END};
+const uint16_t PROGMEM combo_tab[] = {KC_A, KC_C, COMBO_END};
+const uint16_t PROGMEM combo_bspc[] = {KC_B, KC_D, COMBO_END};
+const uint16_t PROGMEM combo_space[] = {KC_1, KC_2, COMBO_END};
+const uint16_t PROGMEM combo_shift[] = {KC_2, KC_3, COMBO_END};
+const uint16_t PROGMEM combo_ctrl[] = {KC_1, KC_3, COMBO_END};
+const uint16_t PROGMEM combo_alt[] = {KC_A, KC_1, COMBO_END};
+const uint16_t PROGMEM combo_gui[] = {KC_D, KC_4, COMBO_END};
+const uint16_t PROGMEM combo_del[] = {KC_3, KC_4, COMBO_END};
+const uint16_t PROGMEM combo_reset[] = {KC_A, KC_D, KC_1, KC_4, COMBO_END};
+
+// Combo assignment
+combo_t key_combos[] = {
+    [COMBO_ESC] = COMBO(combo_esc, KC_ESC),
+    [COMBO_ENTER] = COMBO(combo_enter, KC_ENT),
+    [COMBO_TAB] = COMBO(combo_tab, KC_TAB),
+    [COMBO_BSPC] = COMBO(combo_bspc, KC_BSPC),
+    [COMBO_SPACE] = COMBO(combo_space, KC_SPC),
+    [COMBO_SHIFT] = COMBO(combo_shift, KC_LSFT),
+    [COMBO_CTRL] = COMBO(combo_ctrl, KC_LCTL),
+    [COMBO_ALT] = COMBO(combo_alt, KC_LALT),
+    [COMBO_GUI] = COMBO(combo_gui, KC_LGUI),
+    [COMBO_DEL] = COMBO(combo_del, KC_DEL),
+    [COMBO_RESET] = COMBO(combo_reset, QK_BOOT)
+};
+#endif
+
+#ifdef JOYSTICK_ENABLE
+// Joystick configuration using QMK's built-in framework
+// Note: Axis configuration is handled in keyboard.json for modern QMK
+
+// Layer-based joystick behavior
+void matrix_scan_user(void) {
+    static uint8_t last_layer = 255;
+    uint8_t current_layer = get_highest_layer(layer_state);
+    
+    if (current_layer != last_layer) {
+        switch (current_layer) {
+            case _BASE:
+                // Analog mode - QMK handles this automatically
+                break;
+            case _DIGITAL:
+                // Digital mode - convert analog to buttons in process_record_user
+                break;
+            case _GAMING:
+                // Gaming mode - hybrid analog/digital optimized for FPS
+                break;
+            case _CONFIG:
+                // Config mode - joysticks for menu navigation
+                break;
+        }
+        last_layer = current_layer;
+    }
+}
+
+// Custom joystick processing for digital layers
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    static uint16_t last_joystick_read = 0;
+    
+    // Read joystick axes periodically when in digital mode
+    if (get_highest_layer(layer_state) == _DIGITAL && 
+        timer_elapsed(last_joystick_read) > 50) { // 20Hz update rate
+        
+        // Read axis values (QMK automatically handles ADC conversion)
+        int16_t js1_x = joystick_read_axis(0);  // GP26
+        int16_t js1_y = joystick_read_axis(1);  // GP27  
+        int16_t js2_x = joystick_read_axis(2);  // GP28
+        int16_t js2_y = joystick_read_axis(3);  // GP29
+        
+        // Convert analog to digital with deadzone
+        #define DEADZONE 100
+        #define THRESHOLD 200
+        
+        // Joystick 1 - WASD movement
+        static bool js1_states[4] = {false}; // up, down, left, right
+        bool new_js1_states[4] = {
+            js1_y < -THRESHOLD,  // up
+            js1_y > THRESHOLD,   // down
+            js1_x < -THRESHOLD,  // left
+            js1_x > THRESHOLD    // right
+        };
+        
+        // Send key events for joystick 1
+        uint16_t js1_keys[4] = {KC_W, KC_S, KC_A, KC_D};
+        for (int i = 0; i < 4; i++) {
+            if (new_js1_states[i] != js1_states[i]) {
+                if (new_js1_states[i]) {
+                    register_code(js1_keys[i]);
+                } else {
+                    unregister_code(js1_keys[i]);
+                }
+                js1_states[i] = new_js1_states[i];
+            }
+        }
+        
+        // Joystick 2 - Arrow keys
+        static bool js2_states[4] = {false}; // up, down, left, right
+        bool new_js2_states[4] = {
+            js2_y < -THRESHOLD,  // up
+            js2_y > THRESHOLD,   // down
+            js2_x < -THRESHOLD,  // left
+            js2_x > THRESHOLD    // right
+        };
+        
+        // Send key events for joystick 2
+        uint16_t js2_keys[4] = {KC_UP, KC_DOWN, KC_LEFT, KC_RGHT};
+        for (int i = 0; i < 4; i++) {
+            if (new_js2_states[i] != js2_states[i]) {
+                if (new_js2_states[i]) {
+                    register_code(js2_keys[i]);
+                } else {
+                    unregister_code(js2_keys[i]);
+                }
+                js2_states[i] = new_js2_states[i];
+            }
+        }
+        
+        last_joystick_read = timer_read();
+    }
+    
     // Handle custom keycodes
     switch (keycode) {
-        case JOY_PROFILE:
+        case KC_PROFILE:
             if (record->event.pressed) {
-                cycle_joystick_profiles();
+                // Cycle through layers
+                uint8_t current = get_highest_layer(layer_state);
+                uint8_t next = (current + 1) % 4;
+                layer_clear();
+                layer_on(next);
+            }
+            return false;
+            
+        case KC_CONFIG:
+            if (record->event.pressed) {
+                layer_clear();
+                layer_on(_CONFIG);
+            }
+            return false;
+            
+        case KC_RESET_PROFILE:
+            if (record->event.pressed) {
+                layer_clear();
+                layer_on(_BASE);
             }
             return false;
     }
-
-    // Special combo to enter config mode: Hold A+B+C+D for 3 seconds
-    static uint16_t config_timer;
-    if (layer_state == 0 &&
-        IS_PRESSED(KC_A) && IS_PRESSED(KC_B) &&
-        IS_PRESSED(KC_C) && IS_PRESSED(KC_D)) {
-        if (record->event.pressed) {
-            config_timer = timer_read();
-        } else {
-            if (timer_elapsed(config_timer, 3000)) {
-                enter_config_mode();
-                reset_keyboard(); // This will restart the keyboard
-            }
-        }
-        return false;
-    }
+    
     return true;
+}
+#endif
+
+// RGB or LED indicators for current layer (if available)
+layer_state_t layer_state_set_user(layer_state_t state) {
+    // Future implementation - indicate current layer via LEDs or display
+    return state;
 }

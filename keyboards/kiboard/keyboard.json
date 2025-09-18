@@ -1,5 +1,5 @@
 {
-    "manufacturer": "Custom",
+    "manufacturer": "GearUpZA",
     "keyboard_name": "KiBoard",
     "maintainer": "GearUpZA",
     "bootloader": "rp2040",
@@ -11,7 +11,6 @@
         "pid": "0x6B62",
         "vid": "0xFEED"
     },
-    "debounce": 5,
     "diode_direction": "COL2ROW",
     "matrix_pins": {
         "cols": ["GP0", "GP1", "GP2", "GP3", "GP4", "GP5", "GP6", "GP7"],
@@ -19,16 +18,27 @@
     },
     "features": {
         "bootmagic": true,
-        "command": false,
-        "console": false,
         "extrakey": true,
         "mousekey": true,
         "nkro": true,
-        "combo": true,
-        "pointing_device": true
+        "joystick": true,
+        "combo": true
     },
-    "pointing_device": {
-        "driver": "custom"
+    "joystick": {
+        "enabled": true,
+        "driver": "analog",
+        "button_count": 8,
+        "axis_resolution": 10,
+        "axes": {
+            "x": {"input_pin": "GP26", "low": 0, "rest": 512, "high": 1023},
+            "y": {"input_pin": "GP27", "low": 0, "rest": 512, "high": 1023},
+            "z": {"input_pin": "GP28", "low": 0, "rest": 512, "high": 1023},
+            "rx": {"input_pin": "GP29", "low": 0, "rest": 512, "high": 1023}
+        }
+    },
+    "combo": {
+        "term": 50,
+        "count": 16
     },
     "build": {
         "lto": true
@@ -36,14 +46,14 @@
     "layouts": {
         "LAYOUT": {
             "layout": [
-                {"matrix": [0, 0], "x": 0, "y": 0},
-                {"matrix": [0, 1], "x": 1, "y": 0},
-                {"matrix": [0, 2], "x": 2, "y": 0},
-                {"matrix": [0, 3], "x": 3, "y": 0},
-                {"matrix": [0, 4], "x": 4, "y": 0},
-                {"matrix": [0, 5], "x": 5, "y": 0},
-                {"matrix": [0, 6], "x": 6, "y": 0},
-                {"matrix": [0, 7], "x": 7, "y": 0}
+                {"matrix": [0, 0], "x": 0, "y": 0, "label": "A"},
+                {"matrix": [0, 1], "x": 1, "y": 0, "label": "B"},
+                {"matrix": [0, 2], "x": 2, "y": 0, "label": "C"},
+                {"matrix": [0, 3], "x": 3, "y": 0, "label": "D"},
+                {"matrix": [0, 4], "x": 4, "y": 0, "label": "1"},
+                {"matrix": [0, 5], "x": 5, "y": 0, "label": "2"},
+                {"matrix": [0, 6], "x": 6, "y": 0, "label": "3"},
+                {"matrix": [0, 7], "x": 7, "y": 0, "label": "4"}
             ]
         }
     }

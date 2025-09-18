@@ -1,8 +1,8 @@
 # Build Options
 #   change yes to no to disable
 #
-# Note: Most features are now configured in keyboard.json
-# Only hardware-specific settings remain here
+# Features are configured in keyboard.json
+# Only custom source files are defined here
 
-# Hardware drivers and custom source files
-SRC += analog.c config_mode.c
+# Custom source files for display functionality (future implementation)
+SRC += config_mode.c

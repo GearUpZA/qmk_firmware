@@ -40,6 +40,7 @@ enum joystick_keycodes {
 
 // Function declarations
 void analog_init(void);
+void analog_task(void);
 int16_t analog_read_joy(uint8_t pin);
 void set_joystick_mode(uint8_t joystick, joystick_mode_t mode);
 joystick_mode_t get_joystick_mode(uint8_t joystick);

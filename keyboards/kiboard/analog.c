@@ -14,18 +14,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "kiboard.h"
+#include "analog.h"
 #include <stdint.h>
 #include <stdbool.h>
-#include <stdlib.h>
 
 // QMK function declarations
-uint16_t analogReadPin(uint8_t pin);
 void register_code(uint8_t keycode);
 void unregister_code(uint8_t keycode);
 void tap_code(uint8_t keycode);
 uint16_t timer_read(void);
-bool timer_elapsed(uint16_t last, uint16_t timeout);
+uint16_t timer_elapsed(uint16_t last);
 void register_code16(uint16_t keycode);
 void unregister_code16(uint16_t keycode);
 
@@ -35,22 +33,15 @@ __attribute__((weak)) void matrix_scan_user(void) {}
 // Math function declarations
 int abs(int x);
 
-// Mouse/pointing device declarations
+// Mouse report structure for analog mode
 typedef struct {
     int8_t x;
     int8_t y;
     uint8_t buttons;
 } report_mouse_t;
 
-report_mouse_t pointing_device_get_report(void);
-void pointing_device_set_report(report_mouse_t mouse_report);
-void pointing_device_send(void);
-
-// Joystick modes
-typedef enum {
-    JOY_MODE_ANALOG,    // Analog output for camera/mouse control
-    JOY_MODE_DIGITAL    // Digital hat switch for button presses
-} joystick_mode_t;
+// Mouse report functions
+void host_mouse_send(report_mouse_t *mouse_report);
 
 // Joystick state tracking
 typedef struct {
@@ -132,13 +123,14 @@ void send_joystick_analog(int16_t x1, int16_t y1, int16_t x2, int16_t y2) {
     int8_t mouse_x = (int8_t)((x1 - JOYSTICK_CENTER) / 4);
     int8_t mouse_y = (int8_t)((y1 - JOYSTICK_CENTER) / 4);
 
-    // Send as mouse movement (you can modify this for your specific analog needs)
+    // Send as mouse movement using QMK's mouse functions
     if (mouse_x != 0 || mouse_y != 0) {
-        report_mouse_t mouse_report = pointing_device_get_report();
-        mouse_report.x = mouse_x;
-        mouse_report.y = mouse_y;
-        pointing_device_set_report(mouse_report);
-        pointing_device_send();
+        report_mouse_t mouse_report = {
+            .x = mouse_x,
+            .y = mouse_y,
+            .buttons = 0
+        };
+        host_mouse_send(&mouse_report);
     }
 }
 
@@ -211,7 +203,7 @@ void cycle_joystick_profiles(void) {
     }
 }
 
-void matrix_scan_kb(void) {
+void analog_task(void) {
     // Read joystick values
     int16_t joy1_x = analog_read_joy(JOYSTICK_1_X_PIN);
     int16_t joy1_y = analog_read_joy(JOYSTICK_1_Y_PIN);
@@ -224,7 +216,7 @@ void matrix_scan_kb(void) {
 
         // Send digital events if state changed and debounce time passed
         if (joystick_digital_changed(&joy1_digital) &&
-            timer_elapsed(joy1_digital.debounce_timer, JOYSTICK_DEBOUNCE_MS)) {
+            timer_elapsed(joy1_digital.debounce_timer) > JOYSTICK_DEBOUNCE_MS) {
             // Base keycode for Joy1: you'll need to define these in your keymap
             // JOY1_UP, JOY1_DOWN, JOY1_LEFT, JOY1_RIGHT
             send_joystick_digital_events(&joy1_digital, KC_F13); // Example base keycode
@@ -237,7 +229,7 @@ void matrix_scan_kb(void) {
         update_joystick_digital(joy2_x, joy2_y, &joy2_digital);
 
         if (joystick_digital_changed(&joy2_digital) &&
-            timer_elapsed(joy2_digital.debounce_timer, JOYSTICK_DEBOUNCE_MS)) {
+            timer_elapsed(joy2_digital.debounce_timer) > JOYSTICK_DEBOUNCE_MS) {
             // Base keycode for Joy2: JOY2_UP, JOY2_DOWN, JOY2_LEFT, JOY2_RIGHT
             send_joystick_digital_events(&joy2_digital, KC_F17); // Example base keycode
             joy2_digital.debounce_timer = timer_read();
@@ -253,6 +245,4 @@ void matrix_scan_kb(void) {
 
         send_joystick_analog(analog_x1, analog_y1, analog_x2, analog_y2);
     }
-
-    matrix_scan_user();
 }
