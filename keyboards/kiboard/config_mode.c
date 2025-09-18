@@ -120,7 +120,7 @@ void show_profile_status(void) {
 
     // Get current active layer (simplified - just use default)
     uint8_t current_layer = 0; // Default to BASE layer
-    
+
     // Ensure layer index is valid
     if (current_layer >= 4) current_layer = 0;
 
